@@ -14,11 +14,14 @@ public class ServerConnectionHandler implements Runnable {
     private Server server;
     private boolean serverLive;
     private String nickname = "NewUser"+(int)(Math.random()*3500000+2);
+    private boolean isAdmnistrator;
+    private BufferedReader bReader;
 
     public ServerConnectionHandler(Socket clientSocket, Server server) {
         serverLive = true;
         this.clientSocket = clientSocket;
         this.server = server;
+        isAdmnistrator = false;
     }
 
     @Override
@@ -30,7 +33,7 @@ public class ServerConnectionHandler implements Runnable {
 
     public void receiveMessage() {
 
-        BufferedReader bReader = null;
+        bReader = null;
         try {
             bReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String nicknameBeingSet = null;
@@ -40,29 +43,6 @@ public class ServerConnectionHandler implements Runnable {
 
             receivedMessage = bReader.readLine();
             System.out.println(receivedMessage);
-
-
-            //Using this block to manipulate multiparted commands
-
-            /*switch (receivedMessage.split(" ")[0].toUpperCase()) {
-
-                case "NICKNAME":
-                    if (receivedMessage.split(" ").length == 2) {
-                        nicknameBeingSet = receivedMessage.split(" ")[1];
-                        receivedMessage = "nickname";
-                    }
-                    break;
-
-                case "WHISPER":
-                    nicknameBeingWhispered = receivedMessage.split(" ")[1];
-                    for ( int i=2;i<receivedMessage.split(" ").length;i++) {
-                        messageToWhisper += receivedMessage.split(" ")[i]+" ";
-                    }
-                    receivedMessage = "whisper";
-                    break;
-
-            }*/
-
 
             switch (receivedMessage.split(" ")[0].toUpperCase()) {
 
@@ -89,6 +69,21 @@ public class ServerConnectionHandler implements Runnable {
 
                 case "LIST":
                     listUsers();
+                    break;
+
+                case "ADM":
+                    if (receivedMessage.split(" ")[1].toUpperCase().equals("SENHA")) {
+                        isAdmnistrator = true;
+                        this.getOutputStream().write(("You now are an administrator\n").getBytes());
+                    }
+                    break;
+
+                case "KICK":
+                    if (isAdmnistrator) {
+                        kick(receivedMessage.split(" ")[1]);
+                    } else {
+                        this.getOutputStream().write("You are not an administrator\n".getBytes());
+                    }
                     break;
 
                 default:
@@ -127,21 +122,23 @@ public class ServerConnectionHandler implements Runnable {
 
     public void exitCommand() throws IOException {
 
+        serverLive = false;
         server.getClientList().remove(this);
+        bReader.close();
         this.getOutputStream().close();
         this.clientSocket.close();
-        serverLive = false;
 
     }
 
     public String allCommands() {
 
-        return "Currently there are five commands: \n" +
+        return "The operational commands of the server are as follows:\n" +
                 "Exit will let you exit the chat\n" +
                 "Help will show you all the commands\n" +
                 "Nickname NAME will change your nickname displayed to NAME\n" +
                 "Whisper NAME will send the message to that destination\n" +
-                "List will show all nicknames of the users connected\n";
+                "List will show all nicknames of the users connected\n" +
+                "Kick NAME will kick the user with such name from the channel. Can only be used if you are an administrator\n";
 
     }
 
@@ -176,15 +173,34 @@ public class ServerConnectionHandler implements Runnable {
     public void listUsers() throws IOException {
 
         synchronized (server.getClientList()) {
+            String nicknamesOnline = "";
+
+            for (ServerConnectionHandler c : server.getClientList()) {
+                nicknamesOnline += c.getNickname()+" ";
+
+            }
+
+            this.getOutputStream().write((nicknamesOnline+"\n").getBytes());
+
+        }
+    }
+
+    public void kick(String toWho) throws IOException {
+
+        synchronized (server.getClientList()) {
 
             for (ServerConnectionHandler c : server.getClientList()) {
 
-                this.getOutputStream().write((c.getNickname()+"\n").getBytes());
+                if (c.getNickname().equals(toWho)) {
+
+                    c.exitCommand();
+                    c.getOutputStream().write(("You kicked the user "+toWho+"\n").getBytes());
+
+                }
 
             }
 
         }
     }
-
 
 }
