@@ -100,7 +100,9 @@ public class ServerConnectionHandler implements Runnable {
     }
 
     public OutputStream getOutputStream() throws IOException {
+
         return clientSocket.getOutputStream();
+
     }
 
     public void sendMessageToAll() throws IOException {
@@ -122,11 +124,15 @@ public class ServerConnectionHandler implements Runnable {
 
     public void exitCommand() throws IOException {
 
-        serverLive = false;
-        server.getClientList().remove(this);
-        bReader.close();
-        this.getOutputStream().close();
-        this.clientSocket.close();
+        synchronized (server.getClientList()) {
+
+            serverLive = false;
+            server.getClientList().remove(this);
+            bReader.close();
+            this.getOutputStream().close();
+            this.clientSocket.close();
+
+        }
 
     }
 
