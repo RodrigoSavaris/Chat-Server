@@ -82,6 +82,10 @@ public class ServerConnectionHandler implements Runnable {
                     sendMessageToSomeone(nicknameBeingWhispered,messageToWhisper);
                     break;
 
+                case "LIST":
+                    listUsers();
+                    break;
+
                 default:
                     receivedMessage = nickname + ":" + receivedMessage + "\n";
                     sendMessageToAll();
@@ -131,7 +135,8 @@ public class ServerConnectionHandler implements Runnable {
                 "Exit will let you exit the chat\n" +
                 "Help will show you all the commands\n" +
                 "Nickname NAME will change your nickname displayed to NAME\n" +
-                "Whisper NAME will send the message to that destination\n";
+                "Whisper NAME will send the message to that destination\n" +
+                "List will show all nicknames of the users connected\n";
 
     }
 
@@ -152,7 +157,7 @@ public class ServerConnectionHandler implements Runnable {
             for (ServerConnectionHandler c : server.getClientList()) {
 
                 if (c.getNickname().equals(toWho)) {
-                    message = nickname+":"+message+"\n";
+                    message = nickname + ":" + message + "\n";
                     c.getOutputStream().write(message.getBytes());
                 }
 
@@ -160,6 +165,19 @@ public class ServerConnectionHandler implements Runnable {
 
         }
 
+    }
+
+    public void listUsers() throws IOException {
+
+        synchronized (server.getClientList()) {
+
+            for (ServerConnectionHandler c : server.getClientList()) {
+
+                this.getOutputStream().write((c.getNickname()+"\n").getBytes());
+
+            }
+
+        }
     }
 
 
