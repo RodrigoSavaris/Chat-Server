@@ -44,7 +44,7 @@ public class ServerConnectionHandler implements Runnable {
 
             //Using this block to manipulate multiparted commands
 
-            switch (receivedMessage.split(" ")[0].toUpperCase()) {
+            /*switch (receivedMessage.split(" ")[0].toUpperCase()) {
 
                 case "NICKNAME":
                     if (receivedMessage.split(" ").length == 2) {
@@ -61,10 +61,10 @@ public class ServerConnectionHandler implements Runnable {
                     receivedMessage = "whisper";
                     break;
 
-            }
+            }*/
 
 
-            switch (receivedMessage.toUpperCase()) {
+            switch (receivedMessage.split(" ")[0].toUpperCase()) {
 
                 case "EXIT":
                     exitCommand();
@@ -75,10 +75,15 @@ public class ServerConnectionHandler implements Runnable {
                     break;
 
                 case "NICKNAME":
+                    nicknameBeingSet = receivedMessage.split(" ")[1];
                     changeNickname(nicknameBeingSet);
                     break;
 
                 case "WHISPER":
+                    nicknameBeingWhispered = receivedMessage.split(" ")[1];
+                    for ( int i=2;i<receivedMessage.split(" ").length;i++) {
+                        messageToWhisper += receivedMessage.split(" ")[i]+" ";
+                    }
                     sendMessageToSomeone(nicknameBeingWhispered,messageToWhisper);
                     break;
 
@@ -87,7 +92,7 @@ public class ServerConnectionHandler implements Runnable {
                     break;
 
                 default:
-                    receivedMessage = nickname + ":" + receivedMessage + "\n";
+                    receivedMessage = nickname + ": " + receivedMessage + "\n";
                     sendMessageToAll();
                     break;
             }
@@ -140,9 +145,10 @@ public class ServerConnectionHandler implements Runnable {
 
     }
 
-    public void changeNickname(String newNickname) {
+    public void changeNickname(String newNickname) throws IOException {
 
         nickname = newNickname;
+        this.getOutputStream().write(("Your nickname has been changed to: "+nickname+"\n").getBytes());
 
     }
 
@@ -157,7 +163,7 @@ public class ServerConnectionHandler implements Runnable {
             for (ServerConnectionHandler c : server.getClientList()) {
 
                 if (c.getNickname().equals(toWho)) {
-                    message = nickname + ":" + message + "\n";
+                    message = "(Whisper) " + nickname + ": " + message + "\n";
                     c.getOutputStream().write(message.getBytes());
                 }
 
