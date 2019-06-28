@@ -12,22 +12,18 @@ public class ServerConnectionHandler implements Runnable{
     private Socket clientSocket;
     private String receivedMessage;
     private Server server;
+    private boolean serverLive;
 
     public ServerConnectionHandler(Socket clientSocket, Server server) {
+        serverLive = true;
         this.clientSocket = clientSocket;
         this.server = server;
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (serverLive) {
             receiveMessage();
-            System.out.println(receivedMessage);
-            try {
-                sendMessageToAll();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -40,17 +36,24 @@ public class ServerConnectionHandler implements Runnable{
 
             receivedMessage = bReader.readLine();
             System.out.println(receivedMessage);
-            char[] testing = receivedMessage.toCharArray();
-            for ( int i = 0; i<testing.length;i++) {
-                System.out.println(testing[i]);
+
+
+            switch (receivedMessage.toUpperCase()) {
+
+                case "EXIT":
+                    exitCommand();
+                    break;
+
+                case "HELP":
+                    this.getOutputStream().write(allCommands().getBytes());
+                    break;
+
+                    default:
+                        receivedMessage+="\n";
+                        sendMessageToAll();
+                        break;
             }
 
-
-            if (receivedMessage == "Exit") {
-                System.out.println("the command can work here");
-            }
-
-            receivedMessage+="\n";
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -68,11 +71,27 @@ public class ServerConnectionHandler implements Runnable{
 
             for (ServerConnectionHandler c : server.getClientList()) {
 
-                c.getOutputStream().write(receivedMessage.getBytes());
+                if (c.getOutputStream() != this.getOutputStream()) {
+
+                    c.getOutputStream().write(receivedMessage.getBytes());
+                }
 
             }
 
         }
 
+    }
+
+    public void exitCommand() throws IOException {
+        server.getClientList().remove(this);
+        this.getOutputStream().close();
+        this.clientSocket.close();
+        serverLive = false;
+    }
+
+    public String allCommands() {
+        return "Currently there are two commands: \n" +
+                "Exit will let you exit the chat\n" +
+                "Help will show you all the commands\n";
     }
 }
