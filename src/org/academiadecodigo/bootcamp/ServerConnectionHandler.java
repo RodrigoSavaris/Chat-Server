@@ -46,20 +46,20 @@ public class ServerConnectionHandler implements Runnable {
 
             switch (receivedMessage.split(" ")[0].toUpperCase()) {
 
-                case "EXIT":
+                case "/EXIT":
                     exitCommand();
                     break;
 
-                case "HELP":
+                case "/HELP":
                     this.getOutputStream().write(allCommands().getBytes());
                     break;
 
-                case "NICKNAME":
+                case "/NICKNAME":
                     nicknameBeingSet = receivedMessage.split(" ")[1];
                     changeNickname(nicknameBeingSet);
                     break;
 
-                case "WHISPER":
+                case "/WHISPER":
                     nicknameBeingWhispered = receivedMessage.split(" ")[1];
                     for ( int i=2;i<receivedMessage.split(" ").length;i++) {
                         messageToWhisper += receivedMessage.split(" ")[i]+" ";
@@ -67,18 +67,18 @@ public class ServerConnectionHandler implements Runnable {
                     sendMessageToSomeone(nicknameBeingWhispered,messageToWhisper);
                     break;
 
-                case "LIST":
+                case "/LIST":
                     listUsers();
                     break;
 
-                case "ADM":
+                case "/ADM":
                     if (receivedMessage.split(" ")[1].toUpperCase().equals("SENHA")) {
                         isAdmnistrator = true;
                         this.getOutputStream().write(("You now are an administrator\n").getBytes());
                     }
                     break;
 
-                case "KICK":
+                case "/KICK":
                     if (isAdmnistrator) {
                         kick(receivedMessage.split(" ")[1]);
                     } else {
@@ -138,13 +138,13 @@ public class ServerConnectionHandler implements Runnable {
 
     public String allCommands() {
 
-        return "The operational commands of the server are as follows:\n" +
-                "Exit will let you exit the chat\n" +
-                "Help will show you all the commands\n" +
-                "Nickname NAME will change your nickname displayed to NAME\n" +
-                "Whisper NAME will send the message to that destination\n" +
-                "List will show all nicknames of the users connected\n" +
-                "Kick NAME will kick the user with such name from the channel. Can only be used if you are an administrator\n";
+        return "The operational commands of the server are:\n" +
+                "/Exit will let you exit the chat\n" +
+                "/Help will show you all the commands\n" +
+                "/Nickname NAME will change your nickname displayed to NAME\n" +
+                "/Whisper NAME will send the message to that destination\n" +
+                "/List will show all nicknames of the users connected\n" +
+                "/Kick NAME will kick the user with such name from the channel. Only available to administrators\n";
 
     }
 
