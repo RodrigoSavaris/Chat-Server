@@ -136,7 +136,7 @@ public class ServerConnectionHandler implements Runnable {
 
     public String allCommands() {
 
-        return "Currently there are two commands: \n" +
+        return "Currently there are five commands: \n" +
                 "Exit will let you exit the chat\n" +
                 "Help will show you all the commands\n" +
                 "Nickname NAME will change your nickname displayed to NAME\n" +
